@@ -12,7 +12,6 @@ description: >
 
 agent:
   image: "docker/sandbox-templates:shell-docker"
-  aiFilename: AGENTS.md
   entrypoint:
     run: [agy, --dangerously-skip-permissions, --sandbox=false]
 
