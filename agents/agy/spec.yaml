@@ -1,0 +1,40 @@
+schemaVersion: "1"
+kind: agent
+name: agy
+displayName: Google Antigravity CLI
+description: >
+  The Antigravity CLI is the lightweight Terminal User
+  Interface (TUI) surface of Antigravity. It brings the
+  same core agentic capabilities as Antigravity 2.0 (such
+  as multi-step reasoning, multi-file editing, tool
+  calling, and conversation history) directly to your
+  terminal.
+
+agent:
+  image: "docker/sandbox-templates:shell-docker"
+  aiFilename: AGENTS.md
+  entrypoint:
+    run: [agy, --dangerously-skip-permissions, --sandbox=false]
+
+network:
+  allowedDomains:
+    - "accounts.google.com:443"
+    - "antigravity-cli-auto-updater-974169037036.us-central1.run.app:443"
+    - "antigravity-unleash.goog:443"
+    - "antigravity.google:443"
+    - "cloudcode-pa.googleapis.com:443"
+    - "daily-cloudcode-pa.googleapis.com:443"
+    - "lh3.googleusercontent.com:443"
+    - "oauth2.googleapis.com:443"
+    - "play.googleapis.com:443"
+    - "playwright-akamai.azureedge.net:443"
+    - "playwright-verizon.azureedge.net:443"
+    - "playwright.azureedge.net:443"
+    - "storage.googleapis.com:443"
+    - "www.googleapis.com:443"
+
+commands:
+  install:
+    - command: "curl -fsSL https://antigravity.google/cli/install.sh | bash"
+      user: "1000"
+      description: "Install Google Antigravity CLI"
