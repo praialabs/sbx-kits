@@ -17,9 +17,19 @@ agent:
 
 network:
   allowedDomains:
+    # Installer:
     - "antigravity-cli-auto-updater-974169037036.us-central1.run.app:443"
     - "antigravity.google:443"
     - "storage.googleapis.com:443"
+    # First use:
+    - "antigravity-unleash.goog:443"
+    - "daily-cloudcode-pa.googleapis.com:443"
+    - "github.com:443"
+    - "lh3.googleusercontent.com:443"
+    - "oauth2.googleapis.com:443"
+    - "play.googleapis.com:443"
+    - "playwright.azureedge.net:443"
+    - "www.googleapis.com:443"
 
 commands:
   install:
