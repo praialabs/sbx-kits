@@ -16,6 +16,7 @@ network:
 
     # --- default-package-managers ---
     - "golang.org:443"
+    - "**.hex.pm:443"
     - "hex.pm:443"
     - "nodejs.org:443"
     - "npmjs.com:443"
