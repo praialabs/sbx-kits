@@ -1,0 +1,103 @@
+schemaVersion: "1"
+kind: mixin
+name: default-allow-policies
+displayName: Default Allowed Domains Policy
+description: >
+  Declares default allow rules for AI APIs, package managers, cert validation,
+  OS packages, and cloud infra. This is a stripped-down version of the default
+  "balanced" policy from sbx.
+
+network:
+  allowedDomains:
+    # --- default-ai-services ---
+    - "gemini.google.com:443"
+    - "generativelanguage.googleapis.com:443"
+    - "play.googleapis.com:443"
+
+    # --- default-package-managers ---
+    - "golang.org:443"
+    - "hex.pm:443"
+    - "nodejs.org:443"
+    - "npmjs.com:443"
+    - "npmjs.org:443"
+    - "pkg.go.dev:443"
+    - "proxy.golang.org:443"
+    - "registry.npmjs.org:443"
+    - "sum.golang.org:443"
+
+    # --- default-code-and-containers ---
+    - "**.docker.com:443"
+    - "**.docker.io:443"
+    - "**.gcr.io:443"
+    - "**.github.com:443"
+    - "**.githubcopilot.com:443"
+    - "**.githubusercontent.com:443"
+    - "dhi.io:443"
+    - "docker.com:443"
+    - "docker.io:443"
+    - "gcr.io:443"
+    - "ghcr.io:443"
+    - "github.com:443"
+
+    # --- default-cloud-infrastructure ---
+    - "**.googleapis.com:443"
+    - "**.googleusercontent.com:443"
+    - "**.gstatic.com:443"
+    - "**.gvt1.com:443"
+    - "apis.google.com:443"
+    - "challenges.cloudflare.com:443"
+    - "csp.withgoogle.com:443"
+    - "dl.google.com:443"
+    - "play.google.com:443"
+    - "playwright.azureedge.net:443"
+    - "www.google.com:443"
+
+    # --- default-os-packages ---
+    - "**.debian.org:443"
+    - "alpinelinux.org:443"
+    - "apt.llvm.org:443"
+    - "archive.ubuntu.com:443"
+    - "archive.ubuntu.com:80"
+    - "archlinux.org:443"
+    - "centos.org:443"
+    - "debian.org:443"
+    - "dl-cdn.alpinelinux.org:443"
+    - "fedoraproject.org:443"
+    - "packagecloud.io:443"
+    - "ports.ubuntu.com:443"
+    - "ports.ubuntu.com:80"
+    - "security.ubuntu.com:443"
+    - "security.ubuntu.com:80"
+    - "ubuntu.com:443"
+
+    # --- default-cert-validation ---
+    - "**.amazontrust.com:443"
+    - "**.amazontrust.com:80"
+    - "**.lencr.org:443"
+    - "**.lencr.org:80"
+    - "**.pki.goog:443"
+    - "**.pki.goog:80"
+    - "**.pki.microsoft.com:443"
+    - "**.pki.microsoft.com:80"
+    - "*.one.au.digicert.com:80"
+    - "*.one.ch.digicert.com:80"
+    - "*.one.digicert.co.jp:80"
+    - "*.one.digicert.com:80"
+    - "*.one.nl.digicert.com:80"
+    - "cacerts.digicert.com:80"
+    - "crl*.digicert.com:80"
+    - "crl.comodoca.com:80"
+    - "crl.globalsign.com:80"
+    - "crl.globalsign.net:80"
+    - "crl.sectigo.com:80"
+    - "crl.usertrust.com:80"
+    - "crt.sectigo.com:80"
+    - "isrg.trustid.ocsp.identrust.com:80"
+    - "ocsp.comodoca.com:80"
+    - "ocsp.digicert.com:80"
+    - "ocsp.globalsign.com:443"
+    - "ocsp.globalsign.com:80"
+    - "ocsp.sectigo.com:80"
+    - "ocsp.usertrust.com:80"
+    - "ocsp2.globalsign.com:443"
+    - "ocsp2.globalsign.com:80"

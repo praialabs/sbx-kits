@@ -40,4 +40,10 @@ Docker Sandbox supports fetching kits directly from remote Git repositories. You
 sbx run --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/<kit-dir>" <agent-name>
 ```
 
+Example:
+
+```bash
+sbx run --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy" --kit "git+https://github.com/praialabs/sbx-kits.git#dir=mixins/default-allow-policies" agy
+```
+
 For more details on Git remote references, see the [Docker Sandboxes Git Repository Documentation](https://docs.docker.com/ai/sandboxes/customize/kits/#git-repository).
