@@ -36,6 +36,12 @@ sbx run --kit agents/agy agy
 
 Docker Sandbox supports fetching kits directly from remote Git repositories. You can reference kits in this repository using the following syntax pattern:
 
+> [!IMPORTANT]
+> As of [`sbx` v0.34.0](https://github.com/docker/sbx-releases/releases/tag/v0.34.0#:~:text=Breaking%3A%20installing%20a%20kit%20from%20another%20registry%20or%20a%20Git%20URL%20fails%20until%20you%20add%20its%20prefix%20with%20sbx%20settings%20set%20kit.allowedSources), you need to explicitly allow the kit source before using it:
+> ```
+> sbx settings set kit.allowedSources '["docker.io/","github.com/praialabs/"]'
+> ```
+
 ```bash
 sbx run --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/<kit-dir>" <agent-name>
 ```
