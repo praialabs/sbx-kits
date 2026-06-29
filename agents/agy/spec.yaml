@@ -13,7 +13,7 @@ description: >
 agent:
   image: "docker/sandbox-templates:shell-docker"
   entrypoint:
-    run: [agy, --sandbox]
+    run: [agy]
 
 network:
   allowedDomains:
@@ -36,3 +36,19 @@ commands:
     - command: "curl -fsSL https://antigravity.google/cli/install.sh | bash"
       user: "1000"
       description: "Install Google Antigravity CLI"
+  initFiles:
+    - path: "/home/agent/.gemini/antigravity-cli/settings.json"
+      onlyIfMissing: false
+      mode: "0600"
+      content: |
+        {
+          "enableTelemetry": false,
+          "showFeedbackSurvey": false,
+          "trustedWorkspaces": [
+            "${WORKDIR}"
+          ],
+          "artifactReviewPolicy": "agent-decides",
+          "enableTerminalSandbox": true,
+          "toolPermission": "proceed-in-sandbox",
+          "allowNonWorkspaceAccess": true
+        }
