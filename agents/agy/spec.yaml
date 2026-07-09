@@ -13,7 +13,7 @@ description: >
 agent:
   image: "docker/sandbox-templates:shell-docker"
   entrypoint:
-    run: [agy, --dangerously-skip-permissions, --sandbox=false]
+    run: [agy, --sandbox]
 
 network:
   allowedDomains:
