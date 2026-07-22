@@ -52,3 +52,12 @@ commands:
           "toolPermission": "proceed-in-sandbox",
           "allowNonWorkspaceAccess": true
         }
+    - path: "/home/agent/.gemini/antigravity-cli/cache/onboarding.json"
+      onlyIfMissing: false
+      mode: "0600"
+      content: |
+        {
+          "consumerOnboardingComplete": true,
+          "enterpriseOnboardingComplete": false,
+          "onboardingComplete": true
+        }
