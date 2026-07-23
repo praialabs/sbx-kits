@@ -52,23 +52,36 @@ fi
 export MIX_OS_DEPS_COMPILE_PARTITION_COUNT=$PARTITIONS
 EOF
 
-# Install the latest asdf using Go (installed in the base image)
+# Install asdf using Go (installed in the base image)
+ARG ASDF_VERSION=latest
 RUN mkdir -p /home/agent/.local/bin /home/agent/.asdf/shims && \
-    GOBIN=/home/agent/.local/bin go install github.com/asdf-vm/asdf/cmd/asdf@latest && \
+    GOBIN=/home/agent/.local/bin go install github.com/asdf-vm/asdf/cmd/asdf@${ASDF_VERSION} && \
     go clean -modcache -cache && \
     rm -rf /home/agent/go /home/agent/.cache/go-build
 
-# Install the latest Erlang and Elixir
+# Add asdf plugins
 RUN asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git && \
-    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git && \
-    . /etc/sandbox-persistent.sh && \
-    asdf install erlang latest && \
-    ERL_VERSION=$(asdf list erlang | tr -d ' ' | tail -n1) && \
-    asdf set -u erlang "$ERL_VERSION" && \
-    ERL_MAJOR=$(echo "$ERL_VERSION" | cut -d. -f1) && \
-    ELIXIR_VERSION=$(asdf list all elixir | grep -E "^[0-9]+\.[0-9]+\.[0-9]+-otp-${ERL_MAJOR}$" | tail -n1) && \
-    asdf install elixir "$ELIXIR_VERSION" && \
-    asdf set -u elixir "$ELIXIR_VERSION" && \
+    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git
+
+# Install Erlang/OTP
+ARG ERLANG_VERSION=latest
+RUN . /etc/sandbox-persistent.sh && \
+    asdf install erlang "$ERLANG_VERSION" && \
+    ERLANG_INSTALLED=$(asdf list erlang | tr -d ' ' | tail -n1) && \
+    asdf set -u erlang "$ERLANG_INSTALLED"
+
+# Install Elixir
+ARG ELIXIR_VERSION=latest
+RUN . /etc/sandbox-persistent.sh && \
+    if [ "$ELIXIR_VERSION" = "latest" ]; then \
+      ERLANG_MAJOR=$(asdf current erlang | awk '{print $2}' | cut -d. -f1); \
+      TARGET_ELIXIR=$(asdf list all elixir | grep -E "^[0-9]+\.[0-9]+\.[0-9]+-otp-${ERLANG_MAJOR}$" | tail -n1); \
+    else \
+      TARGET_ELIXIR="$ELIXIR_VERSION"; \
+    fi && \
+    asdf install elixir "$TARGET_ELIXIR" && \
+    ELIXIR_INSTALLED=$(asdf list elixir | tr -d ' ' | tail -n1) && \
+    asdf set -u elixir "$ELIXIR_INSTALLED" && \
     mix local.hex --force && \
     mix local.rebar --force
 

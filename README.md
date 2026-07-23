@@ -58,7 +58,7 @@ For more details on Git remote references, see the [Docker Sandboxes Git Reposit
 
 This repository also contains custom templates that pre-bake additional tools into the sandbox image to avoid repetitive installation steps.
 
-1. Elixir & Erlang Template: extends `docker/sandbox-templates:shell-docker` and pre-installs the latest versions of `asdf`, Erlang, and Elixir. Installation via `asdf` lets agents not only work with Elixir, but also install other versions as needed.
+1. Elixir & Erlang Template: extends `docker/sandbox-templates:shell-docker` and pre-installs `asdf`, Erlang, and Elixir. Installation via `asdf` lets agents not only work with Elixir, but also install other versions as needed.
 2. Google Antigravity CLI + Elixir Template: extends the Elixir & Erlang template and pre-bakes the Google Antigravity CLI (`agy`) into the sandbox image.
 
 ### Building Templates Locally
@@ -67,6 +67,12 @@ We manage building template images using **Docker Bake**, which ships with Docke
 
 ```bash
 docker buildx bake
+```
+
+You can use environment variables to override specific tool versions during the build process:
+
+```bash
+ERLANG_VERSION=latest:28 ELIXIR_VERSION=1.19-otp-28 docker buildx bake
 ```
 
 If you want to compile a specific target individually:
