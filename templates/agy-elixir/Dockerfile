@@ -61,7 +61,8 @@ RUN mkdir -p /home/agent/.local/bin /home/agent/.asdf/shims && \
 
 # Add asdf plugins
 RUN asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git && \
-    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git
+    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git && \
+    asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
 
 # Install Erlang/OTP
 ARG ERLANG_VERSION=latest
@@ -84,6 +85,18 @@ RUN . /etc/sandbox-persistent.sh && \
     asdf set -u elixir "$ELIXIR_INSTALLED" && \
     mix local.hex --force && \
     mix local.rebar --force
+
+# Install Node.js
+ARG NODEJS_VERSION=latest
+RUN . /etc/sandbox-persistent.sh && \
+    asdf install nodejs "$NODEJS_VERSION" && \
+    NODEJS_INSTALLED=$(asdf list nodejs | tr -d ' ' | tail -n1) && \
+    asdf set -u nodejs "$NODEJS_INSTALLED"
+
+# Update npm
+ARG NPM_VERSION=latest
+RUN . /etc/sandbox-persistent.sh && \
+    npm install -g "npm@$NPM_VERSION"
 
 FROM elixir-docker AS agy-elixir-docker
 

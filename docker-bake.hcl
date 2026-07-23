@@ -10,6 +10,14 @@ variable "ELIXIR_VERSION" {
   default = "1.20.2-otp-29"
 }
 
+variable "NODEJS_VERSION" {
+  default = "26.5.0"
+}
+
+variable "NPM_VERSION" {
+  default = "11.17.0"
+}
+
 group "default" {
   targets = ["agy-elixir-docker"]
 }
@@ -23,6 +31,8 @@ target "elixir-docker" {
     ASDF_VERSION   = "${ASDF_VERSION}"
     ERLANG_VERSION = "${ERLANG_VERSION}"
     ELIXIR_VERSION = "${ELIXIR_VERSION}"
+    NODEJS_VERSION = "${NODEJS_VERSION}"
+    NPM_VERSION    = "${NPM_VERSION}"
   }
 }
 
