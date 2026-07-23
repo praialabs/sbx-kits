@@ -1,0 +1,81 @@
+FROM docker/sandbox-templates:shell-docker AS elixir-docker
+
+# Set locale to prevent warnings in Elixir
+ENV LANG=C.UTF-8
+
+USER root
+
+# Keep apt cache for faster builds
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+  echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+# Install compile and watch dependencies (git, curl, unzip, openssl, netbase, etc. are pre-installed in the base image)
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-ubuntu-26-resolute \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked,id=apt-lib-ubuntu-26-resolute \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      autoconf \
+      m4 \
+      libncurses-dev \
+      libreadline-dev \
+      inotify-tools
+
+USER agent
+
+# Configure system-wide sandbox environment (POSIX-compliant file)
+RUN cat <<'EOF' >> /etc/sandbox-persistent.sh
+# Prepend asdf shims to PATH for all users
+export PATH="/home/agent/.asdf/shims:$PATH"
+
+# Load asdf completions (only for interactive shells)
+if [ -n "$BASH_VERSION" ] && [ -t 1 ]; then
+  eval "$(asdf completion bash)"
+fi
+
+# Compile flags for Erlang/OTP or native builds
+export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --without-wx --without-odbc"
+export MAKEFLAGS="-j$(nproc)"
+
+# Enable shell history in Erlang and Elixir shells
+export ERL_AFLAGS="-kernel shell_history enabled"
+
+# Optimize Mix parallel dependency compilation (ncpu/2 clamped to [1, 4])
+# - https://mix.hexdocs.pm/Mix.Tasks.Deps.Compile.html#module-compiling-dependencies-across-multiple-os-processes
+# - https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/#:~:text=Empirical%20testing%20shows%20that%20setting%20it%20to%20half%20of%20the%20number%20of%20cores%20on%20your%20machine%20is%20enough%20to%20maximize%20resource%20usage
+CORES=$(nproc)
+PARTITIONS=$((CORES / 2))
+if [ "$PARTITIONS" -lt 1 ]; then
+  PARTITIONS=1
+elif [ "$PARTITIONS" -gt 4 ]; then
+  PARTITIONS=4
+fi
+export MIX_OS_DEPS_COMPILE_PARTITION_COUNT=$PARTITIONS
+EOF
+
+# Install the latest asdf using Go (installed in the base image)
+RUN mkdir -p /home/agent/.local/bin /home/agent/.asdf/shims && \
+    GOBIN=/home/agent/.local/bin go install github.com/asdf-vm/asdf/cmd/asdf@latest && \
+    go clean -modcache -cache && \
+    rm -rf /home/agent/go /home/agent/.cache/go-build
+
+# Install the latest Erlang and Elixir
+RUN asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git && \
+    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git && \
+    . /etc/sandbox-persistent.sh && \
+    asdf install erlang latest && \
+    ERL_VERSION=$(asdf list erlang | tr -d ' ' | tail -n1) && \
+    asdf set -u erlang "$ERL_VERSION" && \
+    ERL_MAJOR=$(echo "$ERL_VERSION" | cut -d. -f1) && \
+    ELIXIR_VERSION=$(asdf list all elixir | grep -E "^[0-9]+\.[0-9]+\.[0-9]+-otp-${ERL_MAJOR}$" | tail -n1) && \
+    asdf install elixir "$ELIXIR_VERSION" && \
+    asdf set -u elixir "$ELIXIR_VERSION" && \
+    mix local.hex --force && \
+    mix local.rebar --force
+
+FROM elixir-docker AS agy-elixir-docker
+
+LABEL com.docker.sandboxes.flavor="agy-docker"
+
+USER agent
+
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash

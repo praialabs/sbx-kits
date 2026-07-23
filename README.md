@@ -53,3 +53,47 @@ sbx run --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy" --k
 ```
 
 For more details on Git remote references, see the [Docker Sandboxes Git Repository Documentation](https://docs.docker.com/ai/sandboxes/customize/kits/#git-repository).
+
+## Custom Templates
+
+This repository also contains custom templates that pre-bake additional tools into the sandbox image to avoid repetitive installation steps.
+
+1. Elixir & Erlang Template: extends `docker/sandbox-templates:shell-docker` and pre-installs the latest versions of `asdf`, Erlang, and Elixir. Installation via `asdf` lets agents not only work with Elixir, but also install other versions as needed.
+2. Google Antigravity CLI + Elixir Template: extends the Elixir & Erlang template and pre-bakes the Google Antigravity CLI (`agy`) into the sandbox image.
+
+### Building Templates Locally
+
+We manage building template images using **Docker Bake**, which ships with Docker and automatically handles building one or more images using a declarative file, simplifying the build process into a single unified command:
+
+```bash
+docker buildx bake
+```
+
+If you want to compile a specific target individually:
+
+```bash
+# Build only the Elixir base image
+docker buildx bake elixir-docker
+
+# Build only the Antigravity CLI + Elixir image
+docker buildx bake agy-elixir-docker
+```
+
+Once built, you can stream the images directly into the local `sbx` runtime image store:
+
+```bash
+docker image save praialabs/sandbox-templates:elixir-docker | sbx template load /dev/stdin
+docker image save praialabs/sandbox-templates:agy-elixir-docker | sbx template load /dev/stdin
+```
+
+### Combining Kits and Templates
+
+To spin up the Google Antigravity CLI sandbox with Elixir, Erlang, and pre-configured network allow-policies, run:
+
+```bash
+sbx run \
+  --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy" \
+  --kit "git+https://github.com/praialabs/sbx-kits.git#dir=mixins/default-allow-policies" \
+  --template praialabs/sandbox-templates:agy-elixir-docker \
+  agy
+```
