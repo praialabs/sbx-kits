@@ -50,5 +50,10 @@ commands:
           "artifactReviewPolicy": "agent-decides",
           "enableTerminalSandbox": true,
           "toolPermission": "proceed-in-sandbox",
-          "allowNonWorkspaceAccess": true
+          "allowNonWorkspaceAccess": true,
+          "statusLine": {
+            "type": "command",
+            "command": "/home/agent/.gemini/antigravity-cli/statusline.sh",
+            "enabled": true
+          }
         }
