@@ -18,6 +18,10 @@ variable "NPM_VERSION" {
   default = "11.17.0"
 }
 
+variable "AGY_CACHEBUST" {
+  default = ">=1.1.9"
+}
+
 group "default" {
   targets = ["agy-elixir-docker"]
 }
@@ -40,4 +44,7 @@ target "agy-elixir-docker" {
   inherits = ["elixir-docker"]
   target   = "agy-elixir-docker"
   tags     = ["praialabs/sandbox-templates:agy-elixir-docker"]
+  args = {
+    AGY_CACHEBUST = "${AGY_CACHEBUST}"
+  }
 }

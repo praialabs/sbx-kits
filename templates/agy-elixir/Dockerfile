@@ -104,4 +104,5 @@ LABEL com.docker.sandboxes.flavor="agy-docker"
 
 USER agent
 
+ARG AGY_CACHEBUST
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
