@@ -97,11 +97,6 @@ RUN . /etc/sandbox-persistent.sh && \
     NODEJS_INSTALLED=$(asdf list nodejs | tr -d ' ' | tail -n1) && \
     asdf set -u nodejs "$NODEJS_INSTALLED"
 
-# Update npm
-ARG NPM_VERSION=latest
-RUN . /etc/sandbox-persistent.sh && \
-    npm install -g "npm@$NPM_VERSION"
-
 FROM elixir-docker AS agy-elixir-docker
 
 LABEL com.docker.sandboxes.flavor="agy-docker"

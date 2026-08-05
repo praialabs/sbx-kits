@@ -14,10 +14,6 @@ variable "NODEJS_VERSION" {
   default = "26.5.0"
 }
 
-variable "NPM_VERSION" {
-  default = "11.17.0"
-}
-
 variable "AGY_CACHEBUST" {
   default = ">=1.1.9"
 }
@@ -36,7 +32,6 @@ target "elixir-docker" {
     ERLANG_VERSION = "${ERLANG_VERSION}"
     ELIXIR_VERSION = "${ELIXIR_VERSION}"
     NODEJS_VERSION = "${NODEJS_VERSION}"
-    NPM_VERSION    = "${NPM_VERSION}"
   }
 }
 
