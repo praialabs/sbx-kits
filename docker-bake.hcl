@@ -3,15 +3,15 @@ variable "ASDF_VERSION" {
 }
 
 variable "ERLANG_VERSION" {
-  default = "29.0.3"
+  default = "29.0.5"
 }
 
 variable "ELIXIR_VERSION" {
-  default = "1.20.2-otp-29"
+  default = "1.20.3-otp-29"
 }
 
 variable "NODEJS_VERSION" {
-  default = "26.5.0"
+  default = "26.6.0"
 }
 
 variable "AGY_CACHEBUST" {
