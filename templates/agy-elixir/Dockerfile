@@ -13,17 +13,21 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-ubuntu-26-resolute \
     --mount=type=cache,target=/var/lib/apt,sharing=locked,id=apt-lib-ubuntu-26-resolute \
     apt-get update && apt-get install -y --no-install-recommends \
-      build-essential \
       autoconf \
-      m4 \
+      build-essential \
+      inotify-tools \
       libncurses-dev \
       libreadline-dev \
-      inotify-tools
+      m4 \
+      neovim
 
 USER agent
 
 # Configure system-wide sandbox environment (POSIX-compliant file)
 RUN cat <<'EOF' >> /etc/sandbox-persistent.sh
+export EDITOR="nvim"
+export VISUAL="nvim"
+
 # Prepend asdf shims to PATH for all users
 export PATH="/home/agent/.asdf/shims:$PATH"
 
