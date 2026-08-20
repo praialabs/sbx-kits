@@ -1,5 +1,5 @@
-schemaVersion: "1"
-kind: agent
+schemaVersion: "2"
+kind: sandbox
 name: agy
 displayName: Google Antigravity CLI
 description: >
@@ -10,33 +10,33 @@ description: >
   calling, and conversation history) directly to your
   terminal.
 
-agent:
+sandbox:
   image: "docker/sandbox-templates:shell-docker"
-  entrypoint:
-    run: [agy]
+  entrypoint: [agy]
 
-network:
-  allowedDomains:
-    # Installer:
-    - "antigravity-cli-auto-updater-974169037036.us-central1.run.app:443"
-    - "antigravity.google:443"
-    - "storage.googleapis.com:443"
-    # First use:
-    - "antigravity-unleash.goog:443"
-    - "daily-cloudcode-pa.googleapis.com:443"
-    - "github.com:443"
-    - "lh3.googleusercontent.com:443"
-    - "oauth2.googleapis.com:443"
-    - "play.googleapis.com:443"
-    - "playwright.azureedge.net:443"
-    - "www.googleapis.com:443"
+permissions:
+  network:
+    allow:
+      # Installer:
+      - "antigravity-cli-auto-updater-974169037036.us-central1.run.app:443"
+      - "antigravity.google:443"
+      - "storage.googleapis.com:443"
+      # First use:
+      - "antigravity-unleash.goog:443"
+      - "daily-cloudcode-pa.googleapis.com:443"
+      - "github.com:443"
+      - "lh3.googleusercontent.com:443"
+      - "oauth2.googleapis.com:443"
+      - "play.googleapis.com:443"
+      - "playwright.azureedge.net:443"
+      - "www.googleapis.com:443"
 
-commands:
+setup:
   install:
     - command: "curl -fsSL https://antigravity.google/cli/install.sh | bash"
       user: "1000"
       description: "Install Google Antigravity CLI"
-  initFiles:
+  files:
     - path: "/home/agent/.gemini/antigravity-cli/settings.json"
       onlyIfMissing: false
       mode: "0600"
