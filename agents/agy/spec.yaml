@@ -36,6 +36,9 @@ setup:
     - command: "curl -fsSL https://antigravity.google/cli/install.sh | bash"
       user: "1000"
       description: "Install Google Antigravity CLI"
+    - command: "chmod 755 /home/agent/.gemini/antigravity-cli/statusline.sh"
+      user: "1000"
+      description: "Ensure the status line script is executable"
   files:
     - path: "/home/agent/.gemini/antigravity-cli/settings.json"
       onlyIfMissing: false
