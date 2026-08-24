@@ -48,8 +48,7 @@ setup:
             "${WORKDIR}"
           ],
           "artifactReviewPolicy": "agent-decides",
-          "enableTerminalSandbox": true,
-          "toolPermission": "proceed-in-sandbox",
+          "toolPermission": "always-proceed",
           "allowNonWorkspaceAccess": true,
           "statusLine": {
             "type": "command",
