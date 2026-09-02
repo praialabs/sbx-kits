@@ -3,19 +3,19 @@ variable "ASDF_VERSION" {
 }
 
 variable "ERLANG_VERSION" {
-  default = "29.0.5"
+  default = "29.0.6"
 }
 
 variable "ELIXIR_VERSION" {
-  default = "1.20.3-otp-29"
+  default = "1.20.4-otp-29"
 }
 
 variable "NODEJS_VERSION" {
-  default = "26.6.0"
+  default = "26.8.1"
 }
 
 variable "AGY_CACHEBUST" {
-  default = ">=1.1.21"
+  default = ">=1.1.24"
 }
 
 group "default" {
