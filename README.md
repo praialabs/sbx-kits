@@ -23,13 +23,13 @@ You can run sandboxes with these custom kits either by referencing the local dir
 If you have cloned this repository locally, you can spin up a sandbox with a specific kit using:
 
 ```bash
-sbx run --kit agents/<kit-dir> <agent-name>
+sbx run agents/<kit-dir>
 ```
 
 For example, to run the `agy` (Google Antigravity CLI) kit:
 
 ```bash
-sbx run --kit agents/agy agy
+sbx run agents/agy
 ```
 
 ### Remote Git Reference
@@ -43,13 +43,14 @@ Docker Sandbox supports fetching kits directly from remote Git repositories. You
 > ```
 
 ```bash
-sbx run --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/<kit-dir>" <agent-name>
+sbx run 'git+https://github.com/praialabs/sbx-kits.git#dir=agents/<kit-dir>'
 ```
 
-Example:
+Example (composing the `agy` agent kit with the `default-allow-policies` mixin kit):
 
 ```bash
-sbx run --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy" --kit "git+https://github.com/praialabs/sbx-kits.git#dir=mixins/default-allow-policies" agy
+sbx run 'git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy' \
+  --kit 'git+https://github.com/praialabs/sbx-kits.git#dir=mixins/default-allow-policies'
 ```
 
 For more details on Git remote references, see the [Docker Sandboxes Git Repository Documentation](https://docs.docker.com/ai/sandboxes/customize/kits/#git-repository).
@@ -97,9 +98,7 @@ docker image save praialabs/sandbox-templates:agy-elixir-docker | sbx template l
 To spin up the Google Antigravity CLI sandbox with Elixir, Erlang, and pre-configured network allow-policies, run:
 
 ```bash
-sbx run \
-  --kit "git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy" \
-  --kit "git+https://github.com/praialabs/sbx-kits.git#dir=mixins/default-allow-policies" \
-  --template praialabs/sandbox-templates:agy-elixir-docker \
-  agy
+sbx run 'git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy' \
+  --kit 'git+https://github.com/praialabs/sbx-kits.git#dir=mixins/default-allow-policies' \
+  --template praialabs/sandbox-templates:agy-elixir-docker
 ```
