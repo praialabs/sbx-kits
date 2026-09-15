@@ -15,7 +15,7 @@ variable "NODEJS_VERSION" {
 }
 
 variable "AGY_CACHEBUST" {
-  default = ">=1.1.24"
+  default = ">=1.2.3"
 }
 
 group "default" {
