@@ -61,6 +61,10 @@ This repository provides a custom sandbox template tailored for Elixir developme
 
 The [agy-elixir/Dockerfile](./templates/agy-elixir/Dockerfile) extends `docker/sandbox-templates:shell-docker` and pre-bakes the Elixir runtime environment, the Antigravity CLI, and additional tooling into the image to avoid repetitive installation steps.
 
+### Formal Verification with Lean 4
+
+The template also bundles the Lean 4 theorem prover to enable formal verification workflows directly alongside Elixir codebases. AI agents can formalize Elixir modules to mathematically verify state invariants, prove equivalence for refactorings, and catch subtle edge-case bugs.
+
 ### Building the Template Locally
 
 We manage building the template image using **Docker Bake**, which ships with Docker and automatically handles building the image using a declarative file:

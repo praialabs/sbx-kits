@@ -30,12 +30,13 @@ RUN cat <<'EOF' >> /etc/sandbox-persistent.sh
 export EDITOR="nvim"
 export VISUAL="nvim"
 
-# Prepend asdf shims to PATH for all users
-export PATH="/home/agent/.asdf/shims:$PATH"
+# Prepend elan and asdf shims to PATH for all users
+export PATH="/home/agent/.elan/bin:/home/agent/.asdf/shims:$PATH"
 
-# Load asdf completions (only for interactive shells)
+# Load completions (only for interactive shells)
 if [ -n "$BASH_VERSION" ] && [ -t 1 ]; then
   eval "$(asdf completion bash)"
+  eval "$(elan completions bash)"
 fi
 
 # Compile flags for Erlang/OTP or native builds
@@ -99,6 +100,18 @@ RUN . /etc/sandbox-persistent.sh && \
     NODEJS_INSTALLED=$(asdf list nodejs | tr -d ' ' | tail -n1) && \
     asdf set -u nodejs "$NODEJS_INSTALLED"
 
+# Install Lean 4 via elan (the official Lean version manager)
+ARG LEAN_VERSION=stable
+RUN curl -sSf https://elan.lean-lang.org/elan-init.sh | \
+      sh -s -- -y --default-toolchain "$LEAN_VERSION" && \
+    . /etc/sandbox-persistent.sh && \
+    elan --version && \
+    # Note: elan-init records the default toolchain but defers downloading it.
+    # Invoking `lean --version` intentionally triggers the shim to download and
+    # unpack the toolchain into the image layer (see https://github.com/leanprover/elan/issues/210).
+    # This also emits a transient 'could not canonicalize path' warning on first run.
+    lean --version && \
+    lake --version
 
 # Install Google Antigravity CLI
 ARG AGY_CACHEBUST

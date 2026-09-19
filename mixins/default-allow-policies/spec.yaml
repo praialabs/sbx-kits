@@ -19,6 +19,8 @@ permissions:
       - "golang.org:443"
       - "**.hex.pm:443"
       - "hex.pm:443"
+      - "**.lean-lang.org:443"
+      - "lean-lang.org:443"
       - "nodejs.org:443"
       - "npmjs.com:443"
       - "npmjs.org:443"
