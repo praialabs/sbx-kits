@@ -1,4 +1,6 @@
-FROM docker/sandbox-templates:shell-docker AS elixir-docker
+FROM docker/sandbox-templates:shell-docker
+
+LABEL com.docker.sandboxes.flavor="agy-docker"
 
 # Set locale to prevent warnings in Elixir
 ENV LANG=C.UTF-8
@@ -97,11 +99,7 @@ RUN . /etc/sandbox-persistent.sh && \
     NODEJS_INSTALLED=$(asdf list nodejs | tr -d ' ' | tail -n1) && \
     asdf set -u nodejs "$NODEJS_INSTALLED"
 
-FROM elixir-docker AS agy-elixir-docker
 
-LABEL com.docker.sandboxes.flavor="agy-docker"
-
-USER agent
-
+# Install Google Antigravity CLI
 ARG AGY_CACHEBUST
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash

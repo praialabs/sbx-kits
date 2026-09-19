@@ -22,24 +22,15 @@ group "default" {
   targets = ["agy-elixir-docker"]
 }
 
-target "elixir-docker" {
+target "agy-elixir-docker" {
   context = "./templates/agy-elixir"
-  target  = "elixir-docker"
-  tags    = ["praialabs/sandbox-templates:elixir-docker"]
+  tags    = ["praialabs/sandbox-templates:agy-elixir-docker"]
   pull    = true
   args = {
     ASDF_VERSION   = "${ASDF_VERSION}"
     ERLANG_VERSION = "${ERLANG_VERSION}"
     ELIXIR_VERSION = "${ELIXIR_VERSION}"
     NODEJS_VERSION = "${NODEJS_VERSION}"
-  }
-}
-
-target "agy-elixir-docker" {
-  inherits = ["elixir-docker"]
-  target   = "agy-elixir-docker"
-  tags     = ["praialabs/sandbox-templates:agy-elixir-docker"]
-  args = {
-    AGY_CACHEBUST = "${AGY_CACHEBUST}"
+    AGY_CACHEBUST  = "${AGY_CACHEBUST}"
   }
 }

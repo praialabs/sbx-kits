@@ -55,16 +55,15 @@ sbx run 'git+https://github.com/praialabs/sbx-kits.git#dir=agents/agy' \
 
 For more details on Git remote references, see the [Docker Sandboxes Git Repository Documentation](https://docs.docker.com/ai/sandboxes/customize/kits/#git-repository).
 
-## Custom Templates
+## Custom Template
 
-This repository also contains custom templates that pre-bake additional tools into the sandbox image to avoid repetitive installation steps.
+This repository provides a custom sandbox template tailored for Elixir development with the Google Antigravity CLI (`agy`).
 
-1. Elixir, Erlang & Node.js Template: extends `docker/sandbox-templates:shell-docker` and pre-installs `asdf`, Erlang, Elixir, and Node.js. Installation via `asdf` lets agents not only work with Elixir, but also install other versions as needed.
-2. Google Antigravity CLI + Elixir Template: extends the Elixir base template and pre-bakes the Google Antigravity CLI (`agy`) into the sandbox image.
+The [agy-elixir/Dockerfile](./templates/agy-elixir/Dockerfile) extends `docker/sandbox-templates:shell-docker` and pre-bakes the Elixir runtime environment, the Antigravity CLI, and additional tooling into the image to avoid repetitive installation steps.
 
-### Building Templates Locally
+### Building the Template Locally
 
-We manage building template images using **Docker Bake**, which ships with Docker and automatically handles building one or more images using a declarative file, simplifying the build process into a single unified command:
+We manage building the template image using **Docker Bake**, which ships with Docker and automatically handles building the image using a declarative file:
 
 ```bash
 docker buildx bake
@@ -76,20 +75,9 @@ You can use environment variables to override specific tool versions during the 
 ERLANG_VERSION=latest:28 ELIXIR_VERSION=1.19-otp-28 docker buildx bake
 ```
 
-If you want to compile a specific target individually:
+Once built, you can stream the image directly into the local `sbx` runtime image store:
 
 ```bash
-# Build only the Elixir base image
-docker buildx bake elixir-docker
-
-# Build only the Antigravity CLI + Elixir image
-docker buildx bake agy-elixir-docker
-```
-
-Once built, you can stream the images directly into the local `sbx` runtime image store:
-
-```bash
-docker image save praialabs/sandbox-templates:elixir-docker | sbx template load /dev/stdin
 docker image save praialabs/sandbox-templates:agy-elixir-docker | sbx template load /dev/stdin
 ```
 
