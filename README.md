@@ -63,7 +63,7 @@ The [agy-elixir/Dockerfile](./templates/agy-elixir/Dockerfile) extends `docker/s
 
 ### Formal Verification with Lean 4
 
-The template also bundles the Lean 4 theorem prover to enable formal verification workflows directly alongside Elixir codebases. AI agents can formalize Elixir modules to mathematically verify state invariants, prove equivalence for refactorings, and catch subtle edge-case bugs.
+The template also bundles the Lean 4 theorem prover to enable formal verification workflows directly alongside Elixir codebases. Paired with the bundled `elixir-lean-formalization` skill in the `agy` agent, agents can formalize Elixir modules to mathematically verify state invariants, prove equivalence for refactorings, and catch subtle edge-case bugs.
 
 ### Building the Template Locally
 
