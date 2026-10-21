@@ -46,6 +46,9 @@ export MAKEFLAGS="-j$(nproc)"
 # Enable shell history in Erlang and Elixir shells
 export ERL_AFLAGS="-kernel shell_history enabled"
 
+# Isolate Mix build artifacts from host workspace
+export MIX_BUILD_ROOT="_build/sbx"
+
 # Optimize Mix parallel dependency compilation (ncpu/2 clamped to [1, 4])
 # - https://mix.hexdocs.pm/Mix.Tasks.Deps.Compile.html#module-compiling-dependencies-across-multiple-os-processes
 # - https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/#:~:text=Empirical%20testing%20shows%20that%20setting%20it%20to%20half%20of%20the%20number%20of%20cores%20on%20your%20machine%20is%20enough%20to%20maximize%20resource%20usage
