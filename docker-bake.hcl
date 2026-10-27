@@ -3,7 +3,7 @@ variable "ASDF_VERSION" {
 }
 
 variable "ERLANG_VERSION" {
-  default = "29.1.1"
+  default = "29.1.2"
 }
 
 variable "ELIXIR_VERSION" {
@@ -11,15 +11,15 @@ variable "ELIXIR_VERSION" {
 }
 
 variable "NODEJS_VERSION" {
-  default = "26.10.0"
+  default = "26.12.1"
 }
 
 variable "LEAN_VERSION" {
-  default = "4.34.1"
+  default = "4.35.0"
 }
 
 variable "AGY_CACHEBUST" {
-  default = ">=1.3.0"
+  default = ">=1.4.8"
 }
 
 group "default" {
