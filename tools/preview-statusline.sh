@@ -61,6 +61,7 @@ SCENARIO_INIT='{
   "quota": {
     "gemini-5h": { "remaining_fraction": 1.0, "reset_in_seconds": 18000 },
     "gemini-weekly": { "remaining_fraction": 1.0, "reset_in_seconds": 604800 },
+    "gemini-argon-wtu-weekly": { "remaining_fraction": 1.0, "reset_in_seconds": 604800 },
     "3p-5h": { "remaining_fraction": 1.0, "reset_in_seconds": 18000 },
     "3p-weekly": { "remaining_fraction": 1.0, "reset_in_seconds": 604800 }
   },
@@ -76,6 +77,7 @@ SCENARIO_MICRO='{
   "quota": {
     "gemini-5h": { "remaining_fraction": 0.82, "reset_in_seconds": 11700 },
     "gemini-weekly": { "remaining_fraction": 0.88, "reset_in_seconds": 380000 },
+    "gemini-argon-wtu-weekly": { "remaining_fraction": 0.65, "reset_in_seconds": 182400 },
     "3p-5h": { "remaining_fraction": 1.0, "reset_in_seconds": 18000 },
     "3p-weekly": { "remaining_fraction": 1.0, "reset_in_seconds": 604800 }
   },
@@ -91,6 +93,7 @@ SCENARIO_NORMAL='{
   "quota": {
     "gemini-5h": { "remaining_fraction": 0.55, "reset_in_seconds": 7200 },
     "gemini-weekly": { "remaining_fraction": 0.70, "reset_in_seconds": 320000 },
+    "gemini-argon-wtu-weekly": { "remaining_fraction": 0.41, "reset_in_seconds": 182400 },
     "3p-5h": { "remaining_fraction": 0.85, "reset_in_seconds": 12000 },
     "3p-weekly": { "remaining_fraction": 0.90, "reset_in_seconds": 450000 }
   },
@@ -106,6 +109,7 @@ SCENARIO_HIGH='{
   "quota": {
     "gemini-5h": { "remaining_fraction": 0.18, "reset_in_seconds": 2400 },
     "gemini-weekly": { "remaining_fraction": 0.35, "reset_in_seconds": 86400 },
+    "gemini-argon-wtu-weekly": { "remaining_fraction": 0.12, "reset_in_seconds": 43200 },
     "3p-5h": { "remaining_fraction": 0.10, "reset_in_seconds": 3600 },
     "3p-weekly": { "remaining_fraction": 0.25, "reset_in_seconds": 150000 }
   },

@@ -14,24 +14,27 @@ This skill covers how to inspect, debug, update, and verify the custom status li
 
 AGY pipes a single JSON object to the script's `stdin` on every state change.
 
-### Verified in `agy 1.1.21` (via binary inspection)
+### Verified in `agy 1.1.21` and `agy 1.4.12` (via binary inspection & live debug payload)
 * **Cost Structure**:
   - Defined in Go as `Cost *types.StatusLineCost `json:"cost,omitempty"``.
   - Under flat subscription plans (e.g. Google AI Pro) or before metered costs accrue, `Cost` is `nil` and the `"cost"` key is **completely omitted** from the JSON payload.
-  - When present, `StatusLineCost` contains `.estimated`, `.workspace`, and `.subagents`.
+  - When present, `StatusLineCost` contains `.estimated`, `.total_usd`, `.workspace`, and `.subagents` / `.subagent_usd`.
   - Guard with `if .cost != null` in `jq`, and omit the cost display segment when absent to keep the status bar uncluttered.
 * **VCS Branch & Dirty Omission**:
-  - In `agy 1.1.21`, binary inspection confirms `types.StatusLineVCS` only defines `Type string `json:"type,omitempty"``.
-  - AGY only emits `vcs: {"type": "git"}` and does **not** populate `branch` or `dirty` properties in the payload.
+  - Even in `agy 1.4.12` (where `types.StatusLineVCS` defines `Branch` and `Dirty` struct tags), AGY at runtime still only emits `vcs: {"type": "git"}` and does **not** populate `branch` or `dirty` properties in the payload.
   - The script **must** maintain an on-disk fallback (`git rev-parse --abbrev-ref HEAD` and `git status --porcelain`) when `.vcs.branch` is empty so branch name and dirty indicator (`*`) are reliably displayed.
 * **Quota Buckets & Limiting Factor Heuristic**:
-  - Four quota buckets are provided: `gemini-5h`, `gemini-weekly`, `3p-5h`, `3p-weekly`.
-  - Each contains `remaining_fraction` (float 0.0–1.0) and `reset_in_seconds` (integer).
-  - To prevent ambiguity between the 5h rolling window and the weekly ceiling, timers are prefixed (`5h:1h30m` or `wk:16h`).
+  - Five quota buckets are provided across 3 quota families (`g`, `a`, `3p`):
+    - `gemini-5h`, `gemini-weekly` (`g:●·●`)
+    - `gemini-argon-wtu-weekly` (`a:●`, weekly-only)
+    - `3p-5h`, `3p-weekly` (`3p:●·●`)
+  - Each contains `remaining_fraction` (float 0.0–1.0), `reset_time` (ISO-8601 timestamp), and `reset_in_seconds` (integer).
+  - To prevent ambiguity between the 5h rolling window and the weekly ceiling, timers are prefixed (`5h:1h30m` or `wk:2d2h`).
   - **Limiting Factor Heuristic**:
     1. *Healthy Suppression*: If both 5h and weekly are $\ge 85\%$, omit the timer to keep the bar clean.
     2. *Weekly Critical*: If weekly is $\le 20\%$, always show `(wk:...)` as it represents a multi-day lockout risk.
     3. *Constrained Bucket*: Compare 5h vs weekly remaining percentages and display the timer for the lower bucket (or 5h when equal).
+    4. *Argon Weekly*: Passes `100 0 "$Q_AWK" "$RST_AWK_SECS"` to `get_limiting_timer` so it shows `(wk:...)` whenever Argon weekly quota drops below $85\%$.
 * **Direct `stdin` Parsing with Process Substitution**:
   - In standard operation, `jq` reads directly from `stdin` with zero intermediate processes.
   - In debug mode, `exec < <(tee "$DEBUG_FILE")` conditionally redirects `stdin` through `tee` before reaching `jq`.

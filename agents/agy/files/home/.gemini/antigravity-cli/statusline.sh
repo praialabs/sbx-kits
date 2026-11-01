@@ -37,11 +37,13 @@ FG_WHITE="\033[97m"
   read -r COLS
   read -r Q_G5H
   read -r Q_GWK
+  read -r Q_AWK
   read -r Q_3P5H
   read -r Q_3PWK
   read -r COST_RAW
   read -r RST_G5H_SECS
   read -r RST_GWK_SECS
+  read -r RST_AWK_SECS
   read -r RST_3P5H_SECS
   read -r RST_3PWK_SECS
 } <<< "$(
@@ -55,14 +57,16 @@ FG_WHITE="\033[97m"
     (.terminal_width // 80),
     ((.quota["gemini-5h"].remaining_fraction // 1) * 100 | round),
     ((.quota["gemini-weekly"].remaining_fraction // 1) * 100 | round),
+    ((.quota["gemini-argon-wtu-weekly"].remaining_fraction // 1) * 100 | round),
     ((.quota["3p-5h"].remaining_fraction // 1) * 100 | round),
     ((.quota["3p-weekly"].remaining_fraction // 1) * 100 | round),
-    (if .cost != null then (if .cost | type == "object" then (.cost.estimated // .cost.total // "") elif .cost | type == "number" then .cost else "" end) else "" end),
+    (if .cost != null then (if .cost | type == "object" then (.cost.estimated // .cost.total_usd // .cost.total // "") elif .cost | type == "number" then .cost else "" end) else "" end),
     (.quota["gemini-5h"].reset_in_seconds // 0),
     (.quota["gemini-weekly"].reset_in_seconds // 0),
+    (.quota["gemini-argon-wtu-weekly"].reset_in_seconds // 0),
     (.quota["3p-5h"].reset_in_seconds // 0),
     (.quota["3p-weekly"].reset_in_seconds // 0)
-  ' 2>/dev/null || printf "idle\n0\n\nfalse\n\n\n80\n100\n100\n100\n100\n\n0\n0\n0\n0\n"
+  ' 2>/dev/null || printf "idle\n0\n\nfalse\n\n\n80\n100\n100\n100\n100\n100\n\n0\n0\n0\n0\n0\n"
 )"
 
 # Fallback git branch detection:
@@ -205,6 +209,7 @@ get_limiting_timer() {
 
 M_G5H=$(fmt_meter "$Q_G5H")
 M_GWK=$(fmt_meter "$Q_GWK")
+M_AWK=$(fmt_meter "$Q_AWK")
 M_3P5H=$(fmt_meter "$Q_3P5H")
 M_3PWK=$(fmt_meter "$Q_3PWK")
 
@@ -212,21 +217,29 @@ M_3PWK=$(fmt_meter "$Q_3PWK")
 RST_G_STR=""
 T_G=$(get_limiting_timer "$Q_G5H" "$RST_G5H_SECS" "$Q_GWK" "$RST_GWK_SECS")
 if [ -n "$T_G" ]; then
-  if [ "$COLS" -ge 90 ] || [ -z "$COST_STR" ]; then
+  if [ "$COLS" -ge 95 ] || { [ "$COLS" -ge 85 ] && [ -z "$COST_STR" ]; }; then
     RST_G_STR="${FG_GRAY}(${T_G})${RESET}"
+  fi
+fi
+
+RST_A_STR=""
+T_A=$(get_limiting_timer 100 0 "$Q_AWK" "$RST_AWK_SECS")
+if [ -n "$T_A" ]; then
+  if [ "$COLS" -ge 105 ] || { [ "$COLS" -ge 95 ] && [ -z "$COST_STR" ]; }; then
+    RST_A_STR="${FG_GRAY}(${T_A})${RESET}"
   fi
 fi
 
 RST_3P_STR=""
 T_3P=$(get_limiting_timer "$Q_3P5H" "$RST_3P5H_SECS" "$Q_3PWK" "$RST_3PWK_SECS")
 if [ -n "$T_3P" ]; then
-  if [ "$COLS" -ge 110 ]; then
+  if [ "$COLS" -ge 115 ]; then
     RST_3P_STR="${FG_GRAY}(${T_3P})${RESET}"
   fi
 fi
 
-QUOTA_FULL="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK}${RST_G_STR} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}${RST_3P_STR}"
-QUOTA_COMPACT="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK}${RST_G_STR}"
+QUOTA_FULL="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK}${RST_G_STR} ${FG_GRAY}a:${RESET}${M_AWK}${RST_A_STR} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}${RST_3P_STR}"
+QUOTA_BARE="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK} ${FG_GRAY}a:${RESET}${M_AWK} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}"
 
 # 4. Dynamic State Segment
 RAW_STATE=$(echo "$STATE" | tr '[:upper:]' '[:lower:]' | tr '_' ' ')
@@ -239,18 +252,22 @@ case "$RAW_STATE" in
   *)            STATE_COLOR="$FG_GRAY" ;;
 esac
 
-STATE_PADDED=$(printf "%-12s" "$RAW_STATE")
+if [ "$COLS" -ge 100 ]; then
+  STATE_PADDED=$(printf "%-12s" "$RAW_STATE")
+else
+  STATE_PADDED="$RAW_STATE"
+fi
 STATE_STR="${STATE_COLOR}${BOLD}${STATE_PADDED}${RESET}"
 
 # Combine Left-aligned info: ctx [· cost] · quota · state
-if [ "$COLS" -ge 100 ]; then
+if [ "$COLS" -ge 80 ]; then
   LEFT="${CTX_STR}"
   [ -n "$COST_STR" ] && LEFT="${LEFT}${SEP}${COST_STR}"
   LEFT="${LEFT}${SEP}${QUOTA_FULL}${SEP}${STATE_STR}"
-elif [ "$COLS" -ge 80 ]; then
+elif [ "$COLS" -ge 65 ] || [ -z "$COST_STR" ]; then
   LEFT="${CTX_STR}"
   [ -n "$COST_STR" ] && LEFT="${LEFT}${SEP}${COST_STR}"
-  LEFT="${LEFT}${SEP}${QUOTA_COMPACT}${SEP}${STATE_STR}"
+  LEFT="${LEFT}${SEP}${QUOTA_BARE}${SEP}${STATE_STR}"
 else
   LEFT="${CTX_STR}"
   [ -n "$COST_STR" ] && LEFT="${LEFT}${SEP}${COST_STR}"
@@ -281,6 +298,11 @@ if [ -n "$EFFORT" ] && [ "$COLS" -ge 110 ]; then
   EFFORT_STR="${FG_GRAY}${EFFORT_LOWER}${RESET}"
 fi
 
+# ─── Full Terminal Width Alignment ───────────────────────────────────────────
+ESC=$(printf "\033")
+LEFT_PLAIN=$(printf "%b" "$LEFT" | sed "s/${ESC}\\[[0-9;]*m//g")
+LEN_LEFT=${#LEFT_PLAIN}
+
 # Combine Right-aligned info: "branch model effort"
 RIGHT=""
 if [ "$COLS" -lt 75 ]; then
@@ -302,14 +324,18 @@ else
   done
 fi
 
-# ─── Full Terminal Width Alignment ───────────────────────────────────────────
-ESC=$(printf "\033")
-LEFT_PLAIN=$(printf "%b" "$LEFT" | sed "s/${ESC}\\[[0-9;]*m//g")
 RIGHT_PLAIN=$(printf "%b" "$RIGHT" | sed "s/${ESC}\\[[0-9;]*m//g")
-
-LEN_LEFT=${#LEFT_PLAIN}
 LEN_RIGHT=${#RIGHT_PLAIN}
 PAD=$(( COLS - LEN_LEFT - LEN_RIGHT ))
+
+# If right side doesn't fit with branch + model (e.g. 80 cols with cost + long branch),
+# drop branch/effort and keep model name so all 3 quota meters remain on a single line.
+if [ "$PAD" -lt 2 ] && [ -n "$MODEL_STR" ] && [ "$RIGHT" != "$MODEL_STR" ]; then
+  RIGHT="$MODEL_STR"
+  RIGHT_PLAIN=$(printf "%b" "$RIGHT" | sed "s/${ESC}\\[[0-9;]*m//g")
+  LEN_RIGHT=${#RIGHT_PLAIN}
+  PAD=$(( COLS - LEN_LEFT - LEN_RIGHT ))
+fi
 
 if [ "$PAD" -gt 1 ]; then
   SPACES=$(printf "%*s" "$PAD" "")
