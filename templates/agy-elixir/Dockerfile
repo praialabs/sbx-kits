@@ -46,8 +46,9 @@ export MAKEFLAGS="-j$(nproc)"
 # Enable shell history in Erlang and Elixir shells
 export ERL_AFLAGS="-kernel shell_history enabled"
 
-# Isolate Mix build artifacts from host workspace
-export MIX_BUILD_ROOT="_build/sbx"
+# Place sandbox build artifacts into a dedicated subdirectory to prevent
+# conflicts with the host
+export MIX_BUILD_ROOT="_build/_sbx"
 
 # Optimize Mix parallel dependency compilation (ncpu/2 clamped to [1, 4])
 # - https://mix.hexdocs.pm/Mix.Tasks.Deps.Compile.html#module-compiling-dependencies-across-multiple-os-processes
