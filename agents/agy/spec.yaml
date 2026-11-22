@@ -11,7 +11,7 @@ description: >
   terminal.
 
 sandbox:
-  image: "docker/sandbox-templates:shell-docker"
+  image: "docker.io/sbx/shell-docker-image:latest"
   entrypoint: [agy]
 
 permissions:

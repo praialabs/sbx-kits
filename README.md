@@ -59,7 +59,7 @@ For more details on Git remote references, see the [Docker Sandboxes Git Reposit
 
 This repository provides a custom sandbox template tailored for Elixir development with the Google Antigravity CLI (`agy`).
 
-The [agy-elixir/Dockerfile](./templates/agy-elixir/Dockerfile) extends `docker/sandbox-templates:shell-docker` and pre-bakes the Elixir runtime environment, the Antigravity CLI, and additional tooling into the image to avoid repetitive installation steps.
+The [agy-elixir/Dockerfile](./templates/agy-elixir/Dockerfile) extends `docker.io/sbx/shell-docker-image` and pre-bakes the Elixir runtime environment, the Antigravity CLI, and additional tooling into the image to avoid repetitive installation steps.
 
 ### Formal Verification with Lean 4
 

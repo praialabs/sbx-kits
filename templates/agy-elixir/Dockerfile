@@ -1,4 +1,5 @@
-FROM docker/sandbox-templates:shell-docker
+ARG BASE_IMAGE=docker.io/sbx/shell-docker-image:latest
+FROM ${BASE_IMAGE}
 
 LABEL com.docker.sandboxes.flavor="agy-docker"
 

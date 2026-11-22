@@ -1,3 +1,7 @@
+variable "BASE_IMAGE" {
+  default = "docker.io/sbx/shell-docker-image:20261122-c279c9da843e51b135a5be3750ffcdf8078485b4@sha256:34d2de0c8dccd28ce55fd6ea8e3cd6123664f9d75abc9770cf24f43331373f3e"
+}
+
 variable "ASDF_VERSION" {
   default = "v0.20.0"
 }
@@ -29,8 +33,8 @@ group "default" {
 target "agy-elixir-docker" {
   context = "./templates/agy-elixir"
   tags    = ["praialabs/sandbox-templates:agy-elixir-docker"]
-  pull    = true
   args = {
+    BASE_IMAGE     = "${BASE_IMAGE}"
     ASDF_VERSION   = "${ASDF_VERSION}"
     ERLANG_VERSION = "${ERLANG_VERSION}"
     ELIXIR_VERSION = "${ELIXIR_VERSION}"
