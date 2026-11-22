@@ -18,6 +18,10 @@ variable "NODEJS_VERSION" {
   default = "26.13.1"
 }
 
+variable "ZIG_VERSION" {
+  default = "0.17.1"
+}
+
 variable "LEAN_VERSION" {
   default = "4.36.0"
 }
@@ -39,6 +43,7 @@ target "agy-elixir-docker" {
     ERLANG_VERSION = "${ERLANG_VERSION}"
     ELIXIR_VERSION = "${ELIXIR_VERSION}"
     NODEJS_VERSION = "${NODEJS_VERSION}"
+    ZIG_VERSION    = "${ZIG_VERSION}"
     LEAN_VERSION   = "${LEAN_VERSION}"
     AGY_CACHEBUST  = "${AGY_CACHEBUST}"
   }

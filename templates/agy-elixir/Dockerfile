@@ -22,7 +22,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-ubuntu-
       libncurses-dev \
       libreadline-dev \
       m4 \
-      neovim
+      neovim \
+      xz-utils
 
 USER agent
 
@@ -83,9 +84,10 @@ RUN set -eux; \
       git -C "$dir" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD; \
       [ "$(git -C "$dir" rev-parse HEAD)" = "$sha" ]; \
     }; \
-    add_plugin erlang https://github.com/asdf-vm/asdf-erlang.git 7d76f6bed86d01c77b792534c5d69bcadb08b9eb; \
-    add_plugin elixir https://github.com/asdf-vm/asdf-elixir.git 98f9c2c31acb0b8a55dfeb1f0d00cae6d537d4f9; \
-    add_plugin nodejs https://github.com/asdf-vm/asdf-nodejs.git 779c8dc84b3bdab38c2c80622d315c2c3267f74b
+    add_plugin erlang https://github.com/asdf-vm/asdf-erlang.git     7d76f6bed86d01c77b792534c5d69bcadb08b9eb; \
+    add_plugin elixir https://github.com/asdf-vm/asdf-elixir.git     98f9c2c31acb0b8a55dfeb1f0d00cae6d537d4f9; \
+    add_plugin nodejs https://github.com/asdf-vm/asdf-nodejs.git     779c8dc84b3bdab38c2c80622d315c2c3267f74b; \
+    add_plugin zig    https://github.com/asdf-community/asdf-zig.git 2269c444423ba0c79c4268e9cab564e1b28065b3
 
 # Install Erlang/OTP
 ARG ERLANG_VERSION=latest
@@ -115,6 +117,13 @@ RUN . /etc/sandbox-persistent.sh && \
     asdf install nodejs "$NODEJS_VERSION" && \
     NODEJS_INSTALLED=$(asdf list nodejs | tr -d ' ' | tail -n1) && \
     asdf set -u nodejs "$NODEJS_INSTALLED"
+
+# Install Zig (and matching ZLS via asdf-zig)
+ARG ZIG_VERSION=latest
+RUN . /etc/sandbox-persistent.sh && \
+    asdf install zig "$ZIG_VERSION" && \
+    ZIG_INSTALLED=$(asdf list zig | tr -d ' ' | tail -n1) && \
+    asdf set -u zig "$ZIG_INSTALLED"
 
 # Install Lean 4 via elan (the official Lean version manager)
 ARG LEAN_VERSION=stable
