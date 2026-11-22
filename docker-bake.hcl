@@ -11,19 +11,19 @@ variable "ERLANG_VERSION" {
 }
 
 variable "ELIXIR_VERSION" {
-  default = "1.20.4-otp-29"
+  default = "1.20.5-otp-29"
 }
 
 variable "NODEJS_VERSION" {
-  default = "26.12.1"
+  default = "26.13.1"
 }
 
 variable "LEAN_VERSION" {
-  default = "4.35.0"
+  default = "4.36.0"
 }
 
 variable "AGY_CACHEBUST" {
-  default = ">=1.4.8"
+  default = ">=1.5.14"
 }
 
 group "default" {
