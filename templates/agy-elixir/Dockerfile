@@ -71,10 +71,21 @@ RUN mkdir -p /home/agent/.local/bin /home/agent/.asdf/shims && \
     go clean -modcache -cache && \
     rm -rf /home/agent/go /home/agent/.cache/go-build
 
-# Add asdf plugins
-RUN asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git && \
-    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git && \
-    asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+# Add asdf plugins pinned to exact commits (fetch each SHA directly so the remote default branch is never checked out)
+RUN set -eux; \
+    add_plugin() { \
+      name="$1"; url="$2"; sha="$3"; \
+      dir="/home/agent/.asdf/plugins/${name}"; \
+      mkdir -p "$dir" "/home/agent/.asdf/downloads/${name}"; \
+      git -C "$dir" init -q; \
+      git -C "$dir" remote add origin "$url"; \
+      git -C "$dir" fetch --depth 1 origin "$sha"; \
+      git -C "$dir" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD; \
+      [ "$(git -C "$dir" rev-parse HEAD)" = "$sha" ]; \
+    }; \
+    add_plugin erlang https://github.com/asdf-vm/asdf-erlang.git 7d76f6bed86d01c77b792534c5d69bcadb08b9eb; \
+    add_plugin elixir https://github.com/asdf-vm/asdf-elixir.git 98f9c2c31acb0b8a55dfeb1f0d00cae6d537d4f9; \
+    add_plugin nodejs https://github.com/asdf-vm/asdf-nodejs.git 779c8dc84b3bdab38c2c80622d315c2c3267f74b
 
 # Install Erlang/OTP
 ARG ERLANG_VERSION=latest
