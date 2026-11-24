@@ -22,9 +22,7 @@ FG_CYAN="\033[36m"
 FG_GREEN="\033[32m"
 FG_YELLOW="\033[33m"
 FG_RED="\033[31m"
-FG_MAGENTA="\033[35m"
 FG_GRAY="\033[90m"
-FG_WHITE="\033[97m"
 
 # ─── Parse Input JSON (Single jq pass) ────────────────────────────────────────
 {
@@ -35,19 +33,22 @@ FG_WHITE="\033[97m"
   read -r MODEL_DISPLAY
   read -r EFFORT
   read -r COLS
+  read -r HAS_QUOTA
   read -r Q_G5H
   read -r Q_GWK
-  read -r Q_AWK
   read -r Q_3P5H
   read -r Q_3PWK
-  read -r COST_RAW
   read -r RST_G5H_SECS
   read -r RST_GWK_SECS
-  read -r RST_AWK_SECS
   read -r RST_3P5H_SECS
   read -r RST_3PWK_SECS
 } <<< "$(
   jq -r '
+    def qval(k):
+      if .quota[k] == null then "missing"
+      elif .quota[k].disabled == true then "disabled"
+      else (((.quota[k].remaining_fraction // 1) * 100) | round | tostring)
+      end;
     (.agent_state // "idle"),
     ((.context_window.used_percentage // 0) | round),
     (.vcs.branch // ""),
@@ -55,24 +56,22 @@ FG_WHITE="\033[97m"
     (.model.display_name // ""),
     (.model.effort // .model.reasoning_effort // .effort // ""),
     (.terminal_width // 80),
-    ((.quota["gemini-5h"].remaining_fraction // 1) * 100 | round),
-    ((.quota["gemini-weekly"].remaining_fraction // 1) * 100 | round),
-    ((.quota["gemini-argon-wtu-weekly"].remaining_fraction // 1) * 100 | round),
-    ((.quota["3p-5h"].remaining_fraction // 1) * 100 | round),
-    ((.quota["3p-weekly"].remaining_fraction // 1) * 100 | round),
-    (if .cost != null then (if .cost | type == "object" then (.cost.estimated // .cost.total_usd // .cost.total // "") elif .cost | type == "number" then .cost else "" end) else "" end),
+    (.quota != null and (.quota | length > 0)),
+    qval("gemini-5h"),
+    qval("gemini-weekly"),
+    qval("3p-5h"),
+    qval("3p-weekly"),
     (.quota["gemini-5h"].reset_in_seconds // 0),
     (.quota["gemini-weekly"].reset_in_seconds // 0),
-    (.quota["gemini-argon-wtu-weekly"].reset_in_seconds // 0),
     (.quota["3p-5h"].reset_in_seconds // 0),
     (.quota["3p-weekly"].reset_in_seconds // 0)
-  ' 2>/dev/null || printf "idle\n0\n\nfalse\n\n\n80\n100\n100\n100\n100\n100\n\n0\n0\n0\n0\n0\n"
+  ' 2>/dev/null || printf "idle\n0\n\nfalse\n\n\n80\nfalse\nmissing\nmissing\nmissing\nmissing\n0\n0\n0\n0\n"
 )"
 
 # Fallback git branch detection:
-# In agy 1.1.21, binary inspection (types.StatusLineVCS) confirms agy only defines
-# `Type string \`json:"type,omitempty"\`` and does not populate `branch` or `dirty`.
-# We detect branch and dirty status directly via git CLI when omitted in payload:
+# Even when types.StatusLineVCS defines branch/dirty tags (agy 1.4.12–1.5.16),
+# agy may omit them at runtime and only emit {"type": "git"}.
+# Detect branch and dirty status directly via git CLI when omitted in payload:
 if [ -z "$VCS_BRANCH" ]; then
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     VCS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
@@ -97,29 +96,7 @@ fi
 CTX_FMT=$(printf "%2d%% ctx" "$USED_INT")
 CTX_STR="${CTX_COLOR}${CTX_FMT}${RESET}"
 
-# 2. Running Cost (Omitted if missing in payload; formatted when present)
-COST_STR=""
-if [ -n "$COST_RAW" ]; then
-  read -r COST_FMT COST_STYLE <<< "$(awk -v c="$COST_RAW" 'BEGIN {
-    if (c <= 0) {
-      print "$0.00", "dim";
-    } else if (c < 0.001) {
-      print "<$0.001", "dim";
-    } else if (c < 0.0095) {
-      printf "$%.3f %s\n", c, "dim";
-    } else {
-      printf "$%.2f %s\n", c, "normal";
-    }
-  }')"
-
-  if [ "$COST_STYLE" = "dim" ]; then
-    COST_STR="${FG_GRAY}${COST_FMT}${RESET}"
-  else
-    COST_STR="${FG_WHITE}${COST_FMT}${RESET}"
-  fi
-fi
-
-# 3. Dot-Separated Circle Quota Meters (○ 0%, ◔ 25%, ◑ 50%, ◕ 75%, ● 100%)
+# 2. Dot-Separated Circle Quota Meters (○ 0%, ◔ 25%, ◑ 50%, ◕ 75%, ● 100%)
 get_circle_glyph() {
   local val="$1"
   if [ "$val" -le 15 ]; then echo "○";
@@ -131,6 +108,10 @@ get_circle_glyph() {
 
 fmt_meter() {
   local val="$1"
+  if [ "$val" = "disabled" ] || [ "$val" = "missing" ]; then
+    printf "%b\n" "${FG_GRAY}–${RESET}"
+    return
+  fi
   local char=$(get_circle_glyph "$val")
   if [ "$val" -le 15 ]; then
     printf "%b\n" "${FG_RED}${char}${RESET}"
@@ -174,6 +155,10 @@ get_limiting_timer() {
   local qw="$3"
   local rw="$4"
 
+  # Treat disabled/missing buckets as unconstrained (100%, no timer)
+  if [ "$q5" = "disabled" ] || [ "$q5" = "missing" ]; then q5=100; r5=0; fi
+  if [ "$qw" = "disabled" ] || [ "$qw" = "missing" ]; then qw=100; rw=0; fi
+
   # 1. Both buckets healthy (>= 85%) -> omit timer to avoid noise
   if [ "$q5" -ge 85 ] && [ "$qw" -ge 85 ]; then
     echo ""
@@ -207,41 +192,34 @@ get_limiting_timer() {
   echo ""
 }
 
-M_G5H=$(fmt_meter "$Q_G5H")
-M_GWK=$(fmt_meter "$Q_GWK")
-M_AWK=$(fmt_meter "$Q_AWK")
-M_3P5H=$(fmt_meter "$Q_3P5H")
-M_3PWK=$(fmt_meter "$Q_3PWK")
+QUOTA_FULL=""
+QUOTA_BARE=""
+if [ "$HAS_QUOTA" = "true" ]; then
+  M_G5H=$(fmt_meter "$Q_G5H")
+  M_GWK=$(fmt_meter "$Q_GWK")
+  M_3P5H=$(fmt_meter "$Q_3P5H")
+  M_3PWK=$(fmt_meter "$Q_3PWK")
 
-# Quota Reset Timers: dynamically identify the limiting factor bucket
-RST_G_STR=""
-T_G=$(get_limiting_timer "$Q_G5H" "$RST_G5H_SECS" "$Q_GWK" "$RST_GWK_SECS")
-if [ -n "$T_G" ]; then
-  if [ "$COLS" -ge 95 ] || { [ "$COLS" -ge 85 ] && [ -z "$COST_STR" ]; }; then
+  # Quota Reset Timers: dynamically identify the limiting factor bucket
+  RST_G_STR=""
+  T_G=$(get_limiting_timer "$Q_G5H" "$RST_G5H_SECS" "$Q_GWK" "$RST_GWK_SECS")
+  if [ -n "$T_G" ]; then
     RST_G_STR="${FG_GRAY}(${T_G})${RESET}"
   fi
-fi
 
-RST_A_STR=""
-T_A=$(get_limiting_timer 100 0 "$Q_AWK" "$RST_AWK_SECS")
-if [ -n "$T_A" ]; then
-  if [ "$COLS" -ge 105 ] || { [ "$COLS" -ge 95 ] && [ -z "$COST_STR" ]; }; then
-    RST_A_STR="${FG_GRAY}(${T_A})${RESET}"
+  RST_3P_STR=""
+  T_3P=$(get_limiting_timer "$Q_3P5H" "$RST_3P5H_SECS" "$Q_3PWK" "$RST_3PWK_SECS")
+  if [ -n "$T_3P" ]; then
+    if [ "$COLS" -ge 110 ]; then
+      RST_3P_STR="${FG_GRAY}(${T_3P})${RESET}"
+    fi
   fi
+
+  QUOTA_FULL="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK}${RST_G_STR} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}${RST_3P_STR}"
+  QUOTA_BARE="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}"
 fi
 
-RST_3P_STR=""
-T_3P=$(get_limiting_timer "$Q_3P5H" "$RST_3P5H_SECS" "$Q_3PWK" "$RST_3PWK_SECS")
-if [ -n "$T_3P" ]; then
-  if [ "$COLS" -ge 115 ]; then
-    RST_3P_STR="${FG_GRAY}(${T_3P})${RESET}"
-  fi
-fi
-
-QUOTA_FULL="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK}${RST_G_STR} ${FG_GRAY}a:${RESET}${M_AWK}${RST_A_STR} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}${RST_3P_STR}"
-QUOTA_BARE="${FG_GRAY}g:${RESET}${M_G5H}${DOT}${M_GWK} ${FG_GRAY}a:${RESET}${M_AWK} ${FG_GRAY}3p:${RESET}${M_3P5H}${DOT}${M_3PWK}"
-
-# 4. Dynamic State Segment
+# 3. Dynamic State Segment
 RAW_STATE=$(echo "$STATE" | tr '[:upper:]' '[:lower:]' | tr '_' ' ')
 case "$RAW_STATE" in
   idle)         STATE_COLOR="$FG_GRAY" ;;
@@ -259,22 +237,18 @@ else
 fi
 STATE_STR="${STATE_COLOR}${BOLD}${STATE_PADDED}${RESET}"
 
-# Combine Left-aligned info: ctx [· cost] · quota · state
-if [ "$COLS" -ge 80 ]; then
-  LEFT="${CTX_STR}"
-  [ -n "$COST_STR" ] && LEFT="${LEFT}${SEP}${COST_STR}"
-  LEFT="${LEFT}${SEP}${QUOTA_FULL}${SEP}${STATE_STR}"
-elif [ "$COLS" -ge 65 ] || [ -z "$COST_STR" ]; then
-  LEFT="${CTX_STR}"
-  [ -n "$COST_STR" ] && LEFT="${LEFT}${SEP}${COST_STR}"
-  LEFT="${LEFT}${SEP}${QUOTA_BARE}${SEP}${STATE_STR}"
-else
-  LEFT="${CTX_STR}"
-  [ -n "$COST_STR" ] && LEFT="${LEFT}${SEP}${COST_STR}"
-  LEFT="${LEFT}${SEP}${STATE_STR}"
+# Combine Left-aligned info: ctx [· quota] · state
+LEFT="${CTX_STR}"
+if [ -n "$QUOTA_FULL" ]; then
+  if [ "$COLS" -ge 80 ]; then
+    LEFT="${LEFT}${SEP}${QUOTA_FULL}"
+  else
+    LEFT="${LEFT}${SEP}${QUOTA_BARE}"
+  fi
 fi
+LEFT="${LEFT}${SEP}${STATE_STR}"
 
-# 5. VCS Segment (Branch + Dirty)
+# 4. VCS Segment (Branch + Dirty)
 VCS_STR=""
 if [ -n "$VCS_BRANCH" ]; then
   if [ "$VCS_DIRTY" = "true" ]; then
@@ -284,14 +258,14 @@ if [ -n "$VCS_BRANCH" ]; then
   fi
 fi
 
-# 6. Model Segment (Strips trailing effort suffix in parentheses)
-MODEL_NAME=$(echo "$MODEL_DISPLAY" | sed -E 's/ \([^)]+\)$//')
+# 5. Model Segment (Strips trailing effort suffix only, preserving e.g. "Orchestrator (Argon)")
+MODEL_NAME=$(echo "$MODEL_DISPLAY" | sed -E 's/ \(([Ll]ow|[Mm]edium|[Hh]igh|[Xx][Hh]igh|[Mm]ax|[Mm]inimal|[Tt]hinking)\)$//')
 MODEL_STR=""
 if [ -n "$MODEL_NAME" ]; then
   MODEL_STR="${FG_GRAY}${MODEL_NAME}${RESET}"
 fi
 
-# 7. Effort Level Segment (Included when width >= 110)
+# 6. Effort Level Segment (Included when width >= 110)
 EFFORT_STR=""
 if [ -n "$EFFORT" ] && [ "$COLS" -ge 110 ]; then
   EFFORT_LOWER=$(echo "$EFFORT" | tr "[:upper:]" "[:lower:]")
@@ -328,8 +302,8 @@ RIGHT_PLAIN=$(printf "%b" "$RIGHT" | sed "s/${ESC}\\[[0-9;]*m//g")
 LEN_RIGHT=${#RIGHT_PLAIN}
 PAD=$(( COLS - LEN_LEFT - LEN_RIGHT ))
 
-# If right side doesn't fit with branch + model (e.g. 80 cols with cost + long branch),
-# drop branch/effort and keep model name so all 3 quota meters remain on a single line.
+# If right side doesn't fit with branch + model (e.g. 80 cols with timer + long branch),
+# drop branch/effort and keep model name so the status line stays on a single line.
 if [ "$PAD" -lt 2 ] && [ -n "$MODEL_STR" ] && [ "$RIGHT" != "$MODEL_STR" ]; then
   RIGHT="$MODEL_STR"
   RIGHT_PLAIN=$(printf "%b" "$RIGHT" | sed "s/${ESC}\\[[0-9;]*m//g")
